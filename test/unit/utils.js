@@ -1,5 +1,6 @@
 const utils = require('../../lib/utils');
 const crypto = require('crypto');
+const md5 = require('apache-md5');
 
 describe('utils', function() {
 	describe('::sha1', function() {
@@ -25,9 +26,16 @@ describe('utils', function() {
 		});
 	});
 
+	describe('::md5', function() {
+		it('is apache-md5 module', function() {
+			expect(utils.md5).to.equal(md5);
+		});
+	});
+
 	describe('::checkPassword', function() {
+		const password = 'password';
+
 		context('sha1', function() {
-			const password = 'password';
 			const hash = '{SHA}correct-hash';
 
 			beforeEach(function() {
@@ -50,6 +58,34 @@ describe('utils', function() {
 
 			it('returns false if hashes do not match', function() {
 				utils.sha1.returns('other-hash');
+
+				expect(utils.checkPassword(hash, password)).to.be.false;
+			});
+		});
+
+		context('md5', function() {
+			const hash = '$apr1$correct-hash';
+
+			beforeEach(function() {
+				sandbox.stub(utils, 'md5');
+			});
+
+			it('hashes salted password with ::md5', function() {
+				utils.checkPassword(hash, password);
+
+				expect(utils.md5).to.be.calledOnce;
+				expect(utils.md5).to.be.calledOn(utils);
+				expect(utils.md5).to.be.calledWith(password, hash);
+			});
+
+			it('returns true if hashes match', function() {
+				utils.md5.returns('$apr1$correct-hash');
+
+				expect(utils.checkPassword(hash, password)).to.be.true;
+			});
+
+			it('returns false if hashes do not match', function() {
+				utils.md5.returns('$apr1$other-hash');
 
 				expect(utils.checkPassword(hash, password)).to.be.false;
 			});

@@ -2,7 +2,7 @@ const htpasswdjs = require('../../lib');
 const Htpasswd = require('../../lib/htpasswd');
 
 describe('index', function() {
-	describe('authenticate', function() {
+	describe('::authenticate', function() {
 		it('authenticates against provided htpasswd string', function() {
 			let str = 'htpasswd string';
 			let username = 'username';

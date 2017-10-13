@@ -3,11 +3,15 @@ const fse = require('fs-extra');
 const path = require('path');
 
 describe('htpasswd-js', function() {
-	it('works with sha1', function() {
-		let file = path.resolve(__dirname, '../data/test.htpasswd');
-		let str = fse.readFileSync(file, 'utf8');
+	const dataPath = path.resolve(__dirname, '../data/test.htpasswd');
+	let data;
 
-		expect(htpasswd.authenticate(str, 'sha1', 'password')).to.be.true;
-		expect(htpasswd.authenticate(str, 'sha1', 'other')).to.be.false;
+	before(function() {
+		data = fse.readFileSync(dataPath, 'utf8');
+	});
+
+	it('works with sha1', function() {
+		expect(htpasswd.authenticate(data, 'sha1', 'password')).to.be.true;
+		expect(htpasswd.authenticate(data, 'sha1', 'other')).to.be.false;
 	});
 });

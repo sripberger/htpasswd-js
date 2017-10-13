@@ -1,38 +1,26 @@
-const htpasswd = require('../../lib');
-const utils = require('../../lib/utils');
+const htpasswdjs = require('../../lib');
+const Htpasswd = require('../../lib/htpasswd');
 
 describe('index', function() {
 	describe('authenticate', function() {
-		const username = 'username';
-		const password = 'password';
-		const htpasswdStr = 'htpasswd string';
-		const hash = 'hash';
-		const checkResult = 'check result';
-
-		beforeEach(function() {
-			sandbox.stub(utils, 'getHash').returns(hash);
-			sandbox.stub(utils, 'checkPassword').returns(checkResult);
-		});
-
 		it('authenticates against provided htpasswd string', function() {
-			let result = htpasswd.authenticate(htpasswdStr, username, password);
+			let str = 'htpasswd string';
+			let username = 'username';
+			let password = 'password';
+			let htpasswd = new Htpasswd();
+			let authResult = 'auth result';
+			sandbox.stub(Htpasswd, 'parse').returns(htpasswd);
+			sandbox.stub(htpasswd, 'authenticate').returns(authResult);
 
-			expect(utils.getHash).to.be.calledOnce;
-			expect(utils.getHash).to.be.calledOn(utils);
-			expect(utils.getHash).to.be.calledWith(htpasswdStr, username);
-			expect(utils.checkPassword).to.be.calledOnce;
-			expect(utils.checkPassword).to.be.calledOn(utils);
-			expect(utils.checkPassword).to.be.calledWith(hash, password);
-			expect(result).to.equal(checkResult);
-		});
+			let result = htpasswdjs.authenticate(str, username, password);
 
-		it('returns false without checking if hash is not found for user', function() {
-			utils.getHash.returns(null);
-
-			let result = htpasswd.authenticate(htpasswdStr, username, password);
-
-			expect(utils.checkPassword).to.not.be.called;
-			expect(result).to.be.false;
+			expect(Htpasswd.parse).to.be.calledOnce;
+			expect(Htpasswd.parse).to.be.calledOn(Htpasswd);
+			expect(Htpasswd.parse).to.be.calledWith(str);
+			expect(htpasswd.authenticate).to.be.calledOnce;
+			expect(htpasswd.authenticate).to.be.calledOn(htpasswd);
+			expect(htpasswd.authenticate).to.be.calledWith(username, password);
+			expect(result).to.equal(authResult);
 		});
 	});
 });

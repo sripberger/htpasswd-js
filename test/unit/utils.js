@@ -2,34 +2,6 @@ const utils = require('../../lib/utils');
 const crypto = require('crypto');
 
 describe('utils', function() {
-	describe('::getHash', function() {
-		const htpasswd = 'foo:Foo-Hash\nbar:Bar-Hash\nbaz:Baz-Hash\n';
-
-		it('returns the password hash for the provided user', function() {
-			expect(utils.getHash(htpasswd, 'foo')).to.equal('Foo-Hash');
-			expect(utils.getHash(htpasswd, 'bar')).to.equal('Bar-Hash');
-			expect(utils.getHash(htpasswd, 'baz')).to.equal('Baz-Hash');
-		});
-
-		it('returns null if user is not found', function() {
-			expect(utils.getHash(htpasswd, 'qux')).to.be.null;
-		});
-
-		it('returns null for empty string user', function() {
-			expect(utils.getHash(htpasswd, '')).to.be.null;
-		});
-
-		it('supports Windows-style line endings', function() {
-			expect(utils.getHash(htpasswd.replace(/\n/g, '\r\n'), 'bar'))
-				.to.equal('Bar-Hash');
-		});
-
-		it('supports colons in hashes', function() {
-			expect(utils.getHash('foo:hash:with:colons', 'foo'))
-				.to.equal('hash:with:colons');
-		});
-	});
-
 	describe('::sha1', function() {
 		it('returns base64 sha1 digest of a password', function() {
 			let hash = crypto.createHash('sha1');

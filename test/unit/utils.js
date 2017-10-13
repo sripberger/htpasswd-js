@@ -1,8 +1,21 @@
 const utils = require('../../lib/utils');
 const crypto = require('crypto');
 const md5 = require('apache-md5');
+const crypt = require('apache-crypt');
 
 describe('utils', function() {
+	describe('::md5', function() {
+		it('is apache-md5 module', function() {
+			expect(utils.md5).to.equal(md5);
+		});
+	});
+
+	describe('::crypt', function() {
+		it('is apache-crypt module', function() {
+			expect(utils.crypt).to.equal(crypt);
+		});
+	});
+
 	describe('::sha1', function() {
 		it('returns base64 sha1 digest of a password', function() {
 			let hash = crypto.createHash('sha1');
@@ -23,12 +36,6 @@ describe('utils', function() {
 			expect(hash.digest).to.be.calledWith('base64');
 			expect(hash.digest).to.be.calledAfter(hash.update);
 			expect(result).to.equal(hash.digest.firstCall.returnValue);
-		});
-	});
-
-	describe('::md5', function() {
-		it('is apache-md5 module', function() {
-			expect(utils.md5).to.equal(md5);
 		});
 	});
 
@@ -86,6 +93,34 @@ describe('utils', function() {
 
 			it('returns false if hashes do not match', function() {
 				utils.md5.returns('$apr1$other-hash');
+
+				expect(utils.checkPassword(hash, password)).to.be.false;
+			});
+		});
+
+		context('crypt', function() {
+			const hash = 'correct-hash';
+
+			beforeEach(function() {
+				sandbox.stub(utils, 'crypt');
+			});
+
+			it('hashes salted password with ::crypt', function() {
+				utils.checkPassword(hash, password);
+
+				expect(utils.crypt).to.be.calledOnce;
+				expect(utils.crypt).to.be.calledOn(utils);
+				expect(utils.crypt).to.be.calledWith(password, hash);
+			});
+
+			it('returns true if hashes match', function() {
+				utils.crypt.returns('correct-hash');
+
+				expect(utils.checkPassword(hash, password)).to.be.true;
+			});
+
+			it('returns false if hashes do not match', function() {
+				utils.crypt.returns('other-hash');
 
 				expect(utils.checkPassword(hash, password)).to.be.false;
 			});

@@ -19,4 +19,9 @@ describe('htpasswd-js', function() {
 		expect(htpasswd.authenticate(data, 'md5', 'password')).to.be.true;
 		expect(htpasswd.authenticate(data, 'md5', 'other')).to.be.false;
 	});
+
+	it('works with crypt(3)', function() {
+		expect(htpasswd.authenticate(data, 'crypt', 'password')).to.be.true;
+		expect(htpasswd.authenticate(data, 'crypt', 'other')).to.be.false;
+	});
 });

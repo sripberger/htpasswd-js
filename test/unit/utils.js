@@ -18,7 +18,7 @@ describe('utils', function() {
 	});
 
 	describe('::sha1', function() {
-		it('returns base64 sha1 digest of a password', function() {
+		it('returns prefixed base64 sha1 digest of a password', function() {
 			let hash = crypto.createHash('sha1');
 			sandbox.stub(crypto, 'createHash').returns(hash);
 			sandbox.spy(hash, 'update');
@@ -36,7 +36,9 @@ describe('utils', function() {
 			expect(hash.digest).to.be.calledOn(hash);
 			expect(hash.digest).to.be.calledWith('base64');
 			expect(hash.digest).to.be.calledAfter(hash.update);
-			expect(result).to.equal(hash.digest.firstCall.returnValue);
+			expect(result).to.equal(
+				`{SHA}${hash.digest.firstCall.returnValue}`
+			);
 		});
 	});
 
@@ -59,13 +61,13 @@ describe('utils', function() {
 			});
 
 			it('returns true if hashes match', function() {
-				utils.sha1.returns('correct-hash');
+				utils.sha1.returns(hash);
 
 				expect(utils.checkPassword(hash, password)).to.be.true;
 			});
 
 			it('returns false if hashes do not match', function() {
-				utils.sha1.returns('other-hash');
+				utils.sha1.returns('{SHA}other-hash');
 
 				expect(utils.checkPassword(hash, password)).to.be.false;
 			});
@@ -87,7 +89,7 @@ describe('utils', function() {
 			});
 
 			it('returns true if hashes match', function() {
-				utils.md5.returns('$apr1$correct-hash');
+				utils.md5.returns(hash);
 
 				expect(utils.checkPassword(hash, password)).to.be.true;
 			});

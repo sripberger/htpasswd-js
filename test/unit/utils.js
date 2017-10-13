@@ -2,6 +2,7 @@ const utils = require('../../lib/utils');
 const crypto = require('crypto');
 const md5 = require('apache-md5');
 const crypt = require('apache-crypt');
+const bcrypt = require('bcryptjs');
 
 describe('utils', function() {
 	describe('::md5', function() {
@@ -123,6 +124,42 @@ describe('utils', function() {
 				utils.crypt.returns('other-hash');
 
 				expect(utils.checkPassword(hash, password)).to.be.false;
+			});
+		});
+
+		context('bcrypt', function() {
+			const compareResult = 'compareSync result';
+
+			beforeEach(function() {
+				sandbox.stub(bcrypt, 'compareSync').returns(compareResult);
+			});
+
+			it('checks password with bcryptjs::compareSync', function() {
+				let hash = '$2$correct-hash';
+
+				let result = utils.checkPassword(hash, password);
+
+				expect(bcrypt.compareSync).to.be.calledOnce;
+				expect(bcrypt.compareSync).to.be.calledOn;
+				expect(bcrypt.compareSync).to.be.calledWith(password, hash);
+				expect(result).to.equal(compareResult);
+			});
+
+			it('supports alternate bcrypt prefixes', function() {
+				let hash = '$2a$correct-hash';
+				let other = '$2y$correct-hash';
+				let otherCompareResult = 'other compareSync result';
+				bcrypt.compareSync.onSecondCall().returns(otherCompareResult);
+
+				let result = utils.checkPassword(hash, password);
+				let otherResult = utils.checkPassword(other, password);
+
+				expect(bcrypt.compareSync).to.be.calledTwice;
+				expect(bcrypt.compareSync).to.always.be.calledOn(bcrypt);
+				expect(bcrypt.compareSync).to.be.calledWith(password, hash);
+				expect(bcrypt.compareSync).to.be.calledWith(password, other);
+				expect(result).to.equal(compareResult);
+				expect(otherResult).to.equal(otherCompareResult);
 			});
 		});
 	});

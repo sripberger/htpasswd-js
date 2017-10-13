@@ -24,4 +24,9 @@ describe('htpasswd-js', function() {
 		expect(htpasswd.authenticate(data, 'crypt', 'password')).to.be.true;
 		expect(htpasswd.authenticate(data, 'crypt', 'other')).to.be.false;
 	});
+
+	it('works with bcrypt', function() {
+		expect(htpasswd.authenticate(data, 'bcrypt', 'password')).to.be.true;
+		expect(htpasswd.authenticate(data, 'bcrypt', 'other')).to.be.false;
+	});
 });

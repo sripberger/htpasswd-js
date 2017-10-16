@@ -1,5 +1,5 @@
 const Htpasswd = require('../../lib/htpasswd');
-const utils = require('../../lib/utils');
+const checkUtils = require('../../lib/check-utils');
 
 describe('Htpasswd', function() {
 	it('stores provided map of hashes by username', function() {
@@ -88,7 +88,7 @@ describe('Htpasswd', function() {
 		beforeEach(function() {
 			htpasswd = new Htpasswd();
 			sandbox.stub(htpasswd, 'getHash').returns(hash);
-			sandbox.stub(utils, 'checkPassword').returns(checkResult);
+			sandbox.stub(checkUtils, 'checkPassword').returns(checkResult);
 		});
 
 		it('authenticates provided username and password', function() {
@@ -97,9 +97,9 @@ describe('Htpasswd', function() {
 			expect(htpasswd.getHash).to.be.calledOnce;
 			expect(htpasswd.getHash).to.be.calledOn(htpasswd);
 			expect(htpasswd.getHash).to.be.calledWith(username);
-			expect(utils.checkPassword).to.be.calledOnce;
-			expect(utils.checkPassword).to.be.calledOn(utils);
-			expect(utils.checkPassword).to.be.calledWith(hash, password);
+			expect(checkUtils.checkPassword).to.be.calledOnce;
+			expect(checkUtils.checkPassword).to.be.calledOn(checkUtils);
+			expect(checkUtils.checkPassword).to.be.calledWith(hash, password);
 			expect(result).to.equal(checkResult);
 		});
 
@@ -108,7 +108,7 @@ describe('Htpasswd', function() {
 
 			let result = htpasswd.authenticate(username, password);
 
-			expect(utils.checkPassword).to.not.be.called;
+			expect(checkUtils.checkPassword).to.not.be.called;
 			expect(result).to.be.false;
 		});
 	});

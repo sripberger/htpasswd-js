@@ -1,8 +1,8 @@
-const utils = require('../../lib/utils');
+const checkUtils = require('../../lib/check-utils');
 const bcrypt = require('bcryptjs');
 const hashUtils = require('../../lib/hash-utils');
 
-describe('utils', function() {
+describe('checkUtils', function() {
 	describe('::checkPassword', function() {
 		const password = 'password';
 
@@ -16,7 +16,7 @@ describe('utils', function() {
 			it('checks password with bcryptjs::compareSync', function() {
 				let hash = '$2$correct-hash';
 
-				let result = utils.checkPassword(hash, password);
+				let result = checkUtils.checkPassword(hash, password);
 
 				expect(bcrypt.compareSync).to.be.calledOnce;
 				expect(bcrypt.compareSync).to.be.calledOn;
@@ -30,8 +30,8 @@ describe('utils', function() {
 				let otherCompareResult = 'other compareSync result';
 				bcrypt.compareSync.onSecondCall().returns(otherCompareResult);
 
-				let result = utils.checkPassword(hash, password);
-				let otherResult = utils.checkPassword(other, password);
+				let result = checkUtils.checkPassword(hash, password);
+				let otherResult = checkUtils.checkPassword(other, password);
 
 				expect(bcrypt.compareSync).to.be.calledTwice;
 				expect(bcrypt.compareSync).to.always.be.calledOn(bcrypt);
@@ -50,7 +50,7 @@ describe('utils', function() {
 			});
 
 			it('hashes salted password with hashUtils::md5', function() {
-				utils.checkPassword(hash, password);
+				checkUtils.checkPassword(hash, password);
 
 				expect(hashUtils.md5).to.be.calledOnce;
 				expect(hashUtils.md5).to.be.calledOn(hashUtils);
@@ -60,13 +60,13 @@ describe('utils', function() {
 			it('returns true if hashes match', function() {
 				hashUtils.md5.returns(hash);
 
-				expect(utils.checkPassword(hash, password)).to.be.true;
+				expect(checkUtils.checkPassword(hash, password)).to.be.true;
 			});
 
 			it('returns false if hashes do not match', function() {
 				hashUtils.md5.returns('$apr1$other-hash');
 
-				expect(utils.checkPassword(hash, password)).to.be.false;
+				expect(checkUtils.checkPassword(hash, password)).to.be.false;
 			});
 		});
 
@@ -78,7 +78,7 @@ describe('utils', function() {
 			});
 
 			it('hashes password with hashUtils::sha1', function() {
-				utils.checkPassword(hash, password);
+				checkUtils.checkPassword(hash, password);
 
 				expect(hashUtils.sha1).to.be.calledOnce;
 				expect(hashUtils.sha1).to.be.calledOn(hashUtils);
@@ -88,13 +88,13 @@ describe('utils', function() {
 			it('returns true if hashes match', function() {
 				hashUtils.sha1.returns(hash);
 
-				expect(utils.checkPassword(hash, password)).to.be.true;
+				expect(checkUtils.checkPassword(hash, password)).to.be.true;
 			});
 
 			it('returns false if hashes do not match', function() {
 				hashUtils.sha1.returns('{SHA}other-hash');
 
-				expect(utils.checkPassword(hash, password)).to.be.false;
+				expect(checkUtils.checkPassword(hash, password)).to.be.false;
 			});
 		});
 
@@ -106,7 +106,7 @@ describe('utils', function() {
 			});
 
 			it('hashes salted password with hashUtils::crypt', function() {
-				utils.checkPassword(hash, password);
+				checkUtils.checkPassword(hash, password);
 
 				expect(hashUtils.crypt).to.be.calledOnce;
 				expect(hashUtils.crypt).to.be.calledOn(hashUtils);
@@ -116,13 +116,13 @@ describe('utils', function() {
 			it('returns true if hashes match', function() {
 				hashUtils.crypt.returns('correct-hash');
 
-				expect(utils.checkPassword(hash, password)).to.be.true;
+				expect(checkUtils.checkPassword(hash, password)).to.be.true;
 			});
 
 			it('returns false if hashes do not match', function() {
 				hashUtils.crypt.returns('other-hash');
 
-				expect(utils.checkPassword(hash, password)).to.be.false;
+				expect(checkUtils.checkPassword(hash, password)).to.be.false;
 			});
 		});
 	});

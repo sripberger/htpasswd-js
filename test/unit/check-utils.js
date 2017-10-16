@@ -1,129 +1,211 @@
 const checkUtils = require('../../lib/check-utils');
 const bcrypt = require('bcryptjs');
+const sinon = require('sinon');
 const hashUtils = require('../../lib/hash-utils');
+const XError = require('xerror');
 
 describe('checkUtils', function() {
+	describe('::getHashType', function() {
+		it('returns bcrypt for bcrypt prefixes', function() {
+			expect(checkUtils.getHashType('$2$hash')).to.equal('bcrypt');
+			expect(checkUtils.getHashType('$2a$hash')).to.equal('bcrypt');
+			expect(checkUtils.getHashType('$2y$hash')).to.equal('bcrypt');
+		});
+
+		it('returns md5 for md5 prefixes', function() {
+			expect(checkUtils.getHashType('$1$hash')).to.equal('md5');
+			expect(checkUtils.getHashType('$apr1$hash')).to.equal('md5');
+		});
+
+		it('returns sha1 for sha1 prefix', function() {
+			expect(checkUtils.getHashType('{SHA}hash')).to.equal('sha1');
+		});
+
+		it('returns crypt for all others', function() {
+			expect(checkUtils.getHashType('hash')).to.equal('crypt');
+		});
+	});
+
+	describe('::getHashFunction', function() {
+		it('returns hashUtils::md5 for md5', function() {
+			expect(checkUtils.getHashFunction('md5')).to.equal(hashUtils.md5);
+		});
+
+		it('returns hashUtils::crypt for crypt', function() {
+			expect(checkUtils.getHashFunction('crypt')).to.equal(hashUtils.crypt);
+		});
+
+		it('returns hashUtils::sha1 for sha1', function() {
+			expect(checkUtils.getHashFunction('sha1')).to.equal(hashUtils.sha1);
+		});
+
+		it('throws invalid argument for all others', function() {
+			expect(() => checkUtils.getHashFunction('foo'))
+				.to.throw(XError).that.satisfies((err) => {
+					expect(err.code).to.equal(XError.INVALID_ARGUMENT);
+					expect(err.message).to.equal('Unsupported hash type \'foo\'');
+					expect(err.data).to.deep.equal({ hashType: 'foo' });
+					return true;
+				});
+		});
+	});
+
+	describe('::getSyncCheckFunction', function() {
+		let hashFunction;
+
+		beforeEach(function() {
+			hashFunction = sinon.spy(function hashFunction() {
+				return 'password-hash';
+			});
+			sandbox.stub(checkUtils, 'getHashFunction').returns(hashFunction);
+		});
+
+		it('gets hash function for provided hash type and returns a function', function() {
+			let result = checkUtils.getSyncCheckFunction('foo');
+
+			expect(checkUtils.getHashFunction).to.be.calledOnce;
+			expect(checkUtils.getHashFunction).to.be.calledOn(checkUtils);
+			expect(checkUtils.getHashFunction).to.be.calledWith('foo');
+			expect(result).to.be.a('function');
+		});
+
+		describe('returned function', function() {
+			let checkFunction;
+
+			beforeEach(function() {
+				checkFunction = checkUtils.getSyncCheckFunction('foo');
+			});
+
+			it('invokes hash function with provided password and hash', function() {
+				checkFunction('password', 'hash');
+
+				expect(hashFunction).to.be.calledOnce;
+				expect(hashFunction).to.be.calledWith('password', 'hash');
+			});
+
+			it('returns true if hash result matches', function() {
+				expect(checkFunction('password', 'password-hash')).to.be.true;
+			});
+
+			it('returns false otherwise', function() {
+				expect(checkFunction('password', 'other-hash')).to.be.false;
+			});
+		});
+	});
+
+	describe('::getAsyncCheckFunction', function() {
+		let syncCheckFunction;
+
+		beforeEach(function() {
+			syncCheckFunction = sinon.spy(function syncCheckFunction() {
+				return 'check result';
+			});
+			sandbox.stub(checkUtils, 'getSyncCheckFunction').returns(syncCheckFunction);
+		});
+
+		it('gets a synchronous check function for the provided type and returns a function', function() {
+			let result = checkUtils.getAsyncCheckFunction('foo');
+
+			expect(checkUtils.getSyncCheckFunction).to.be.calledOnce;
+			expect(checkUtils.getSyncCheckFunction).to.be.calledOn(checkUtils);
+			expect(checkUtils.getSyncCheckFunction).to.be.calledWith('foo');
+			expect(result).to.be.a('function');
+		});
+
+		describe('returned function', function() {
+			let asyncCheckFunction;
+
+			beforeEach(function() {
+				asyncCheckFunction = checkUtils.getAsyncCheckFunction('foo');
+			});
+
+			it('wraps synchronous check function in a promise', function() {
+				return asyncCheckFunction('password', 'hash')
+					.then((result) => {
+						expect(syncCheckFunction).to.be.calledOnce;
+						expect(syncCheckFunction).to.be.calledWith('password', 'hash');
+						expect(result).to.equal('check result');
+					});
+			});
+		});
+	});
+
+	describe('::getCheckFunction', function() {
+		const syncCheckFunction = () => {};
+		const asyncCheckFunction = () => {};
+
+		beforeEach(function() {
+			sandbox.stub(checkUtils, 'getHashType').returns('foo');
+			sandbox.stub(checkUtils, 'getSyncCheckFunction').returns(
+				syncCheckFunction
+			);
+			sandbox.stub(checkUtils, 'getAsyncCheckFunction').returns(
+				asyncCheckFunction
+			);
+		});
+
+		it('gets the hash type for the provided hash', function() {
+			checkUtils.getCheckFunction('hash');
+
+			expect(checkUtils.getHashType).to.be.calledOnce;
+			expect(checkUtils.getHashType).to.be.calledOn(checkUtils);
+			expect(checkUtils.getHashType).to.be.calledWith('hash');
+		});
+
+		context('bcrypt hash type', function() {
+			beforeEach(function() {
+				checkUtils.getHashType.returns('bcrypt');
+			});
+
+			it('returns bcrypt::compare', function() {
+				let result = checkUtils.getCheckFunction('hash');
+
+				expect(result).to.equal(bcrypt.compare);
+			});
+
+			it('returns bcrypt::compareSync if sync is true', function() {
+				let result = checkUtils.getCheckFunction('hash', true);
+
+				expect(result).to.equal(bcrypt.compareSync);
+			});
+		});
+
+		context('other hash types', function() {
+			it('returns asynchronous check function', function() {
+				let result = checkUtils.getCheckFunction('hash');
+
+				expect(checkUtils.getAsyncCheckFunction).to.be.calledOnce;
+				expect(checkUtils.getAsyncCheckFunction).to.be.calledOn(checkUtils);
+				expect(checkUtils.getAsyncCheckFunction).to.be.calledWith('foo');
+				expect(result).to.equal(asyncCheckFunction);
+			});
+
+			it('returns synchronous check function if sync is true', function() {
+				let result = checkUtils.getCheckFunction('hash', true);
+
+				expect(checkUtils.getSyncCheckFunction).to.be.calledOnce;
+				expect(checkUtils.getSyncCheckFunction).to.be.calledOn(checkUtils);
+				expect(checkUtils.getSyncCheckFunction).to.be.calledWith('foo');
+				expect(result).to.equal(syncCheckFunction);
+			});
+		});
+	});
+
 	describe('::checkPassword', function() {
-		const password = 'password';
-
-		context('bcrypt', function() {
-			const compareResult = 'compareSync result';
-
-			beforeEach(function() {
-				sandbox.stub(bcrypt, 'compareSync').returns(compareResult);
+		it('gets and executes check function, returning result', function() {
+			let checkFunction = sinon.spy(function checkFunction() {
+				return 'check result';
 			});
+			sandbox.stub(checkUtils, 'getCheckFunction').returns(checkFunction);
 
-			it('checks password with bcryptjs::compareSync', function() {
-				let hash = '$2$correct-hash';
+			let result = checkUtils.checkPassword('password', 'hash', 'sync');
 
-				let result = checkUtils.checkPassword(hash, password);
-
-				expect(bcrypt.compareSync).to.be.calledOnce;
-				expect(bcrypt.compareSync).to.be.calledOn;
-				expect(bcrypt.compareSync).to.be.calledWith(password, hash);
-				expect(result).to.equal(compareResult);
-			});
-
-			it('supports alternate bcrypt prefixes', function() {
-				let hash = '$2a$correct-hash';
-				let other = '$2y$correct-hash';
-				let otherCompareResult = 'other compareSync result';
-				bcrypt.compareSync.onSecondCall().returns(otherCompareResult);
-
-				let result = checkUtils.checkPassword(hash, password);
-				let otherResult = checkUtils.checkPassword(other, password);
-
-				expect(bcrypt.compareSync).to.be.calledTwice;
-				expect(bcrypt.compareSync).to.always.be.calledOn(bcrypt);
-				expect(bcrypt.compareSync).to.be.calledWith(password, hash);
-				expect(bcrypt.compareSync).to.be.calledWith(password, other);
-				expect(result).to.equal(compareResult);
-				expect(otherResult).to.equal(otherCompareResult);
-			});
-		});
-
-		context('md5', function() {
-			const hash = '$apr1$correct-hash';
-
-			beforeEach(function() {
-				sandbox.stub(hashUtils, 'md5');
-			});
-
-			it('hashes salted password with hashUtils::md5', function() {
-				checkUtils.checkPassword(hash, password);
-
-				expect(hashUtils.md5).to.be.calledOnce;
-				expect(hashUtils.md5).to.be.calledOn(hashUtils);
-				expect(hashUtils.md5).to.be.calledWith(password, hash);
-			});
-
-			it('returns true if hashes match', function() {
-				hashUtils.md5.returns(hash);
-
-				expect(checkUtils.checkPassword(hash, password)).to.be.true;
-			});
-
-			it('returns false if hashes do not match', function() {
-				hashUtils.md5.returns('$apr1$other-hash');
-
-				expect(checkUtils.checkPassword(hash, password)).to.be.false;
-			});
-		});
-
-		context('sha1', function() {
-			const hash = '{SHA}correct-hash';
-
-			beforeEach(function() {
-				sandbox.stub(hashUtils, 'sha1');
-			});
-
-			it('hashes password with hashUtils::sha1', function() {
-				checkUtils.checkPassword(hash, password);
-
-				expect(hashUtils.sha1).to.be.calledOnce;
-				expect(hashUtils.sha1).to.be.calledOn(hashUtils);
-				expect(hashUtils.sha1).to.be.calledWith(password);
-			});
-
-			it('returns true if hashes match', function() {
-				hashUtils.sha1.returns(hash);
-
-				expect(checkUtils.checkPassword(hash, password)).to.be.true;
-			});
-
-			it('returns false if hashes do not match', function() {
-				hashUtils.sha1.returns('{SHA}other-hash');
-
-				expect(checkUtils.checkPassword(hash, password)).to.be.false;
-			});
-		});
-
-		context('crypt', function() {
-			const hash = 'correct-hash';
-
-			beforeEach(function() {
-				sandbox.stub(hashUtils, 'crypt');
-			});
-
-			it('hashes salted password with hashUtils::crypt', function() {
-				checkUtils.checkPassword(hash, password);
-
-				expect(hashUtils.crypt).to.be.calledOnce;
-				expect(hashUtils.crypt).to.be.calledOn(hashUtils);
-				expect(hashUtils.crypt).to.be.calledWith(password, hash);
-			});
-
-			it('returns true if hashes match', function() {
-				hashUtils.crypt.returns('correct-hash');
-
-				expect(checkUtils.checkPassword(hash, password)).to.be.true;
-			});
-
-			it('returns false if hashes do not match', function() {
-				hashUtils.crypt.returns('other-hash');
-
-				expect(checkUtils.checkPassword(hash, password)).to.be.false;
-			});
+			expect(checkUtils.getCheckFunction).to.be.calledOnce;
+			expect(checkUtils.getCheckFunction).to.be.calledOn(checkUtils);
+			expect(checkUtils.getCheckFunction).to.be.calledWith('hash', 'sync');
+			expect(checkFunction).to.be.calledOnce;
+			expect(checkFunction).to.be.calledWith('password', 'hash');
+			expect(result).to.equal('check result');
 		});
 	});
 });

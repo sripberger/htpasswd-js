@@ -31,6 +31,7 @@
   "dependencies": {
     "apache-crypt": "^1.2.1",
     "apache-md5": "^1.1.2",
-    "bcryptjs": "^2.4.3"
+    "bcryptjs": "^2.4.3",
+    "xerror": "^1.1.2"
   }
 }

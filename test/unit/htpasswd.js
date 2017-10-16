@@ -99,7 +99,7 @@ describe('Htpasswd', function() {
 			expect(htpasswd.getHash).to.be.calledWith(username);
 			expect(checkUtils.checkPassword).to.be.calledOnce;
 			expect(checkUtils.checkPassword).to.be.calledOn(checkUtils);
-			expect(checkUtils.checkPassword).to.be.calledWith(hash, password);
+			expect(checkUtils.checkPassword).to.be.calledWith(password, hash, true);
 			expect(result).to.equal(checkResult);
 		});
 

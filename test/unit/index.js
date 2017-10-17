@@ -22,7 +22,7 @@ describe('index', function() {
 			sandbox.stub(htpasswd, 'authenticate').resolves(authResult);
 		});
 
-		it('asynchronously authenticates against provided htpasswd file', function() {
+		it('authenticates against provided htpasswd file', function() {
 			return htpasswdjs.authenticate({ username, password, file })
 				.then((result) => {
 					expect(fse.readFile).to.be.calledOnce;
@@ -41,7 +41,7 @@ describe('index', function() {
 				});
 		});
 
-		it('asynchronously authenticates against provided htpasswd data', function() {
+		it('authenticates against provided htpasswd data', function() {
 			return htpasswdjs.authenticate({ username, password, data })
 				.then((result) => {
 					expect(fse.readFile).to.not.be.called;
@@ -57,6 +57,41 @@ describe('index', function() {
 					expect(result).to.equal(authResult);
 				});
 		});
+
+		it('resolves with false if neither file nor data are provided', function() {
+			return htpasswdjs.authenticate({ username, password })
+				.then((result) => {
+					expect(fse.readFile).to.not.be.called;
+					expect(Htpasswd.parse).to.not.be.called;
+					expect(result).to.be.false;
+				});
+		});
+
+		it('resolves with false if username is missing', function() {
+			return Promise.all([
+				htpasswdjs.authenticate({ password, file }),
+				htpasswdjs.authenticate({ password, data })
+			])
+				.then(([ result, otherResult ]) => {
+					expect(fse.readFile).to.not.be.called;
+					expect(Htpasswd.parse).to.not.be.called;
+					expect(result).to.be.false;
+					expect(otherResult).to.be.false;
+				});
+		});
+
+		it('resolves with false if password is missing', function() {
+			return Promise.all([
+				htpasswdjs.authenticate({ username, file }),
+				htpasswdjs.authenticate({ username, data })
+			])
+				.then(([ result, otherResult ]) => {
+					expect(fse.readFile).to.not.be.called;
+					expect(Htpasswd.parse).to.not.be.called;
+					expect(result).to.be.false;
+					expect(otherResult).to.be.false;
+				});
+		});
 	});
 
 	describe('::authenticateSync', function() {
@@ -64,7 +99,7 @@ describe('index', function() {
 			sandbox.stub(htpasswd, 'authenticateSync').returns(authResult);
 		});
 
-		it('synchronously authenticates against provided htpasswd file', function() {
+		it('authenticates against provided htpasswd file', function() {
 			let result = htpasswdjs.authenticateSync({
 				username,
 				password,
@@ -86,7 +121,7 @@ describe('index', function() {
 			expect(result).to.equal(authResult);
 		});
 
-		it('synchronously authenticates against provided htpasswd data', function() {
+		it('authenticates against provided htpasswd data', function() {
 			let result = htpasswdjs.authenticateSync({
 				username,
 				password,
@@ -104,6 +139,34 @@ describe('index', function() {
 				password
 			);
 			expect(result).to.equal(authResult);
+		});
+
+		it('returns false if neither file nor data are provided', function() {
+			let result = htpasswdjs.authenticateSync({ username, password });
+
+			expect(fse.readFileSync).to.not.be.called;
+			expect(Htpasswd.parse).to.not.be.called;
+			expect(result).to.be.false;
+		});
+
+		it('returns false if username is missing', function() {
+			let result = htpasswdjs.authenticateSync({ username, file });
+			let otherResult = htpasswdjs.authenticateSync({ username, data });
+
+			expect(fse.readFileSync).to.not.be.called;
+			expect(Htpasswd.parse).to.not.be.called;
+			expect(result).to.be.false;
+			expect(otherResult).to.be.false;
+		});
+
+		it('returns false if password is missing', function() {
+			let result = htpasswdjs.authenticateSync({ password, file });
+			let otherResult = htpasswdjs.authenticateSync({ password, data });
+
+			expect(fse.readFileSync).to.not.be.called;
+			expect(Htpasswd.parse).to.not.be.called;
+			expect(result).to.be.false;
+			expect(otherResult).to.be.false;
 		});
 	});
 });

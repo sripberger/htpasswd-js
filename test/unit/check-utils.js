@@ -50,7 +50,7 @@ describe('checkUtils', function() {
 		});
 	});
 
-	describe('::getSyncCheckFunction', function() {
+	describe('::createCheckFunction', function() {
 		let hashFunction;
 
 		beforeEach(function() {
@@ -61,7 +61,7 @@ describe('checkUtils', function() {
 		});
 
 		it('gets hash function for provided hash type and returns a function', function() {
-			let result = checkUtils.getSyncCheckFunction('foo');
+			let result = checkUtils.createCheckFunction('foo');
 
 			expect(checkUtils.getHashFunction).to.be.calledOnce;
 			expect(checkUtils.getHashFunction).to.be.calledOn(checkUtils);
@@ -73,74 +73,40 @@ describe('checkUtils', function() {
 			let checkFunction;
 
 			beforeEach(function() {
-				checkFunction = checkUtils.getSyncCheckFunction('foo');
+				checkFunction = checkUtils.createCheckFunction('foo');
 			});
 
 			it('invokes hash function with provided password and hash', function() {
-				checkFunction('password', 'hash');
-
-				expect(hashFunction).to.be.calledOnce;
-				expect(hashFunction).to.be.calledWith('password', 'hash');
+				return checkFunction('password', 'hash')
+					.then(() => {
+						expect(hashFunction).to.be.calledOnce;
+						expect(hashFunction).to.be.calledWith('password', 'hash');
+					});
 			});
 
-			it('returns true if hash result matches', function() {
-				expect(checkFunction('password', 'password-hash')).to.be.true;
-			});
-
-			it('returns false otherwise', function() {
-				expect(checkFunction('password', 'other-hash')).to.be.false;
-			});
-		});
-	});
-
-	describe('::getAsyncCheckFunction', function() {
-		let syncCheckFunction;
-
-		beforeEach(function() {
-			syncCheckFunction = sinon.spy(function syncCheckFunction() {
-				return 'check result';
-			});
-			sandbox.stub(checkUtils, 'getSyncCheckFunction').returns(syncCheckFunction);
-		});
-
-		it('gets a synchronous check function for the provided type and returns a function', function() {
-			let result = checkUtils.getAsyncCheckFunction('foo');
-
-			expect(checkUtils.getSyncCheckFunction).to.be.calledOnce;
-			expect(checkUtils.getSyncCheckFunction).to.be.calledOn(checkUtils);
-			expect(checkUtils.getSyncCheckFunction).to.be.calledWith('foo');
-			expect(result).to.be.a('function');
-		});
-
-		describe('returned function', function() {
-			let asyncCheckFunction;
-
-			beforeEach(function() {
-				asyncCheckFunction = checkUtils.getAsyncCheckFunction('foo');
-			});
-
-			it('wraps synchronous check function in a promise', function() {
-				return asyncCheckFunction('password', 'hash')
+			it('resolves with true if hash result matches', function() {
+				return checkFunction('password', 'password-hash')
 					.then((result) => {
-						expect(syncCheckFunction).to.be.calledOnce;
-						expect(syncCheckFunction).to.be.calledWith('password', 'hash');
-						expect(result).to.equal('check result');
+						expect(result).to.be.true;
+					});
+			});
+
+			it('resolves with false otherwise', function() {
+				return checkFunction('password', 'other-hash')
+					.then((result) => {
+						expect(result).to.be.false;
 					});
 			});
 		});
 	});
 
 	describe('::getCheckFunction', function() {
-		const syncCheckFunction = () => {};
-		const asyncCheckFunction = () => {};
+		const createdCheckFunction = () => {};
 
 		beforeEach(function() {
 			sandbox.stub(checkUtils, 'getHashType').returns('foo');
-			sandbox.stub(checkUtils, 'getSyncCheckFunction').returns(
-				syncCheckFunction
-			);
-			sandbox.stub(checkUtils, 'getAsyncCheckFunction').returns(
-				asyncCheckFunction
+			sandbox.stub(checkUtils, 'createCheckFunction').returns(
+				createdCheckFunction
 			);
 		});
 
@@ -165,13 +131,13 @@ describe('checkUtils', function() {
 		});
 
 		context('other hash types', function() {
-			it('returns asynchronous check function', function() {
+			it('returns created check function', function() {
 				let result = checkUtils.getCheckFunction('hash');
 
-				expect(checkUtils.getAsyncCheckFunction).to.be.calledOnce;
-				expect(checkUtils.getAsyncCheckFunction).to.be.calledOn(checkUtils);
-				expect(checkUtils.getAsyncCheckFunction).to.be.calledWith('foo');
-				expect(result).to.equal(asyncCheckFunction);
+				expect(checkUtils.createCheckFunction).to.be.calledOnce;
+				expect(checkUtils.createCheckFunction).to.be.calledOn(checkUtils);
+				expect(checkUtils.createCheckFunction).to.be.calledWith('foo');
+				expect(result).to.equal(createdCheckFunction);
 			});
 		});
 	});

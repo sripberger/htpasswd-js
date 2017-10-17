@@ -1,6 +1,6 @@
 {
   "name": "htpasswd-js",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Pure JS htpasswd authentication",
   "author": "Steve Ripberger",
   "license": "Apache-2.0",

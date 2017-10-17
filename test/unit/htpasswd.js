@@ -78,6 +78,46 @@ describe('Htpasswd', function() {
 		});
 	});
 
+	describe('#authenticate', function() {
+		const username = 'username';
+		const password = 'password';
+		const hash = 'hash';
+		const checkResult = 'check result';
+		let htpasswd;
+
+		beforeEach(function() {
+			htpasswd = new Htpasswd();
+			sandbox.stub(htpasswd, 'getHash').returns(hash);
+			sandbox.stub(checkUtils, 'checkPassword').resolves(checkResult);
+		});
+
+		it('authenticates provided username and password', function() {
+			return htpasswd.authenticate(username, password)
+				.then((result) => {
+					expect(htpasswd.getHash).to.be.calledOnce;
+					expect(htpasswd.getHash).to.be.calledOn(htpasswd);
+					expect(htpasswd.getHash).to.be.calledWith(username);
+					expect(checkUtils.checkPassword).to.be.calledOnce;
+					expect(checkUtils.checkPassword).to.be.calledOn(checkUtils);
+					expect(checkUtils.checkPassword).to.be.calledWithExactly(
+						password,
+						hash
+					);
+					expect(result).to.equal(checkResult);
+				});
+		});
+
+		it('resolves with false without checking if hash is not found for user', function() {
+			htpasswd.getHash.returns(null);
+
+			return htpasswd.authenticate(username, password)
+				.then((result) => {
+					expect(checkUtils.checkPassword).to.not.be.called;
+					expect(result).to.be.false;
+				});
+		});
+	});
+
 	describe('#authenticateSync', function() {
 		const username = 'username';
 		const password = 'password';
@@ -99,7 +139,11 @@ describe('Htpasswd', function() {
 			expect(htpasswd.getHash).to.be.calledWith(username);
 			expect(checkUtils.checkPassword).to.be.calledOnce;
 			expect(checkUtils.checkPassword).to.be.calledOn(checkUtils);
-			expect(checkUtils.checkPassword).to.be.calledWith(password, hash, true);
+			expect(checkUtils.checkPassword).to.be.calledWith(
+				password,
+				hash,
+				true
+			);
 			expect(result).to.equal(checkResult);
 		});
 

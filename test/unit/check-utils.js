@@ -162,12 +162,6 @@ describe('checkUtils', function() {
 
 				expect(result).to.equal(bcrypt.compare);
 			});
-
-			it('returns bcrypt::compareSync if sync is true', function() {
-				let result = checkUtils.getCheckFunction('hash', true);
-
-				expect(result).to.equal(bcrypt.compareSync);
-			});
 		});
 
 		context('other hash types', function() {
@@ -179,15 +173,6 @@ describe('checkUtils', function() {
 				expect(checkUtils.getAsyncCheckFunction).to.be.calledWith('foo');
 				expect(result).to.equal(asyncCheckFunction);
 			});
-
-			it('returns synchronous check function if sync is true', function() {
-				let result = checkUtils.getCheckFunction('hash', true);
-
-				expect(checkUtils.getSyncCheckFunction).to.be.calledOnce;
-				expect(checkUtils.getSyncCheckFunction).to.be.calledOn(checkUtils);
-				expect(checkUtils.getSyncCheckFunction).to.be.calledWith('foo');
-				expect(result).to.equal(syncCheckFunction);
-			});
 		});
 	});
 
@@ -198,11 +183,11 @@ describe('checkUtils', function() {
 			});
 			sandbox.stub(checkUtils, 'getCheckFunction').returns(checkFunction);
 
-			let result = checkUtils.checkPassword('password', 'hash', 'sync');
+			let result = checkUtils.checkPassword('password', 'hash');
 
 			expect(checkUtils.getCheckFunction).to.be.calledOnce;
 			expect(checkUtils.getCheckFunction).to.be.calledOn(checkUtils);
-			expect(checkUtils.getCheckFunction).to.be.calledWith('hash', 'sync');
+			expect(checkUtils.getCheckFunction).to.be.calledWith('hash');
 			expect(checkFunction).to.be.calledOnce;
 			expect(checkFunction).to.be.calledWith('password', 'hash');
 			expect(result).to.equal('check result');

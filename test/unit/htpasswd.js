@@ -117,43 +117,4 @@ describe('Htpasswd', function() {
 				});
 		});
 	});
-
-	describe('#authenticateSync', function() {
-		const username = 'username';
-		const password = 'password';
-		const hash = 'hash';
-		const checkResult = 'check result';
-		let htpasswd;
-
-		beforeEach(function() {
-			htpasswd = new Htpasswd();
-			sandbox.stub(htpasswd, 'getHash').returns(hash);
-			sandbox.stub(checkUtils, 'checkPassword').returns(checkResult);
-		});
-
-		it('authenticates provided username and password', function() {
-			let result = htpasswd.authenticateSync(username, password);
-
-			expect(htpasswd.getHash).to.be.calledOnce;
-			expect(htpasswd.getHash).to.be.calledOn(htpasswd);
-			expect(htpasswd.getHash).to.be.calledWith(username);
-			expect(checkUtils.checkPassword).to.be.calledOnce;
-			expect(checkUtils.checkPassword).to.be.calledOn(checkUtils);
-			expect(checkUtils.checkPassword).to.be.calledWith(
-				password,
-				hash,
-				true
-			);
-			expect(result).to.equal(checkResult);
-		});
-
-		it('returns false without checking if hash is not found for user', function() {
-			htpasswd.getHash.returns(null);
-
-			let result = htpasswd.authenticateSync(username, password);
-
-			expect(checkUtils.checkPassword).to.not.be.called;
-			expect(result).to.be.false;
-		});
-	});
 });

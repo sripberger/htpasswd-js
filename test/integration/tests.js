@@ -1,20 +1,22 @@
 const htpasswd = require('../../lib');
-const fse = require('fs-extra');
 const path = require('path');
 
 describe('htpasswd-js', function() {
-	const dataPath = path.resolve(__dirname, '../data/test.htpasswd');
-	let data;
-
-	before(function() {
-		data = fse.readFileSync(dataPath, 'utf8');
-	});
+	const file = path.resolve(__dirname, '../data/test.htpasswd');
 
 	describe('::authenticate', function() {
 		it('works with bcrypt', function() {
 			return Promise.all([
-				htpasswd.authenticate(data, 'bcrypt', 'password'),
-				htpasswd.authenticate(data, 'bcrypt', 'other')
+				htpasswd.authenticate({
+					username: 'bcrypt',
+					password: 'password',
+					file
+				}),
+				htpasswd.authenticate({
+					username: 'bcrypt',
+					password: 'other',
+					file
+				})
 			])
 				.then(([ result, otherResult ]) => {
 					expect(result).to.be.true;
@@ -24,8 +26,16 @@ describe('htpasswd-js', function() {
 
 		it('works with md5', function() {
 			return Promise.all([
-				htpasswd.authenticate(data, 'md5', 'password'),
-				htpasswd.authenticate(data, 'md5', 'other')
+				htpasswd.authenticate({
+					username: 'md5',
+					password: 'password',
+					file
+				}),
+				htpasswd.authenticate({
+					username: 'md5',
+					password: 'other',
+					file
+				})
 			])
 				.then(([ result, otherResult ]) => {
 					expect(result).to.be.true;
@@ -35,8 +45,16 @@ describe('htpasswd-js', function() {
 
 		it('works with sha1', function() {
 			return Promise.all([
-				htpasswd.authenticate(data, 'sha1', 'password'),
-				htpasswd.authenticate(data, 'sha1', 'other')
+				htpasswd.authenticate({
+					username: 'sha1',
+					password: 'password',
+					file
+				}),
+				htpasswd.authenticate({
+					username: 'sha1',
+					password: 'other',
+					file
+				})
 			])
 				.then(([ result, otherResult ]) => {
 					expect(result).to.be.true;
@@ -46,8 +64,16 @@ describe('htpasswd-js', function() {
 
 		it('works with crypt(3)', function() {
 			return Promise.all([
-				htpasswd.authenticate(data, 'crypt', 'password'),
-				htpasswd.authenticate(data, 'crypt', 'other')
+				htpasswd.authenticate({
+					username: 'crypt',
+					password: 'password',
+					file
+				}),
+				htpasswd.authenticate({
+					username: 'crypt',
+					password: 'other',
+					file
+				})
 			])
 				.then(([ result, otherResult ]) => {
 					expect(result).to.be.true;
@@ -58,23 +84,55 @@ describe('htpasswd-js', function() {
 
 	describe('::authenticateSync', function() {
 		it('works with bcrypt', function() {
-			expect(htpasswd.authenticateSync(data, 'bcrypt', 'password')).to.be.true;
-			expect(htpasswd.authenticateSync(data, 'bcrypt', 'other')).to.be.false;
+			expect(htpasswd.authenticateSync({
+				username: 'bcrypt',
+				password: 'password',
+				file
+			})).to.be.true;
+			expect(htpasswd.authenticateSync({
+				username: 'bcrypt',
+				password: 'other',
+				file
+			})).to.be.false;
 		});
 
 		it('works with md5', function() {
-			expect(htpasswd.authenticateSync(data, 'md5', 'password')).to.be.true;
-			expect(htpasswd.authenticateSync(data, 'md5', 'other')).to.be.false;
+			expect(htpasswd.authenticateSync({
+				username: 'md5',
+				password: 'password',
+				file
+			})).to.be.true;
+			expect(htpasswd.authenticateSync({
+				username: 'md5',
+				password: 'other',
+				file
+			})).to.be.false;
 		});
 
 		it('works with sha1', function() {
-			expect(htpasswd.authenticateSync(data, 'sha1', 'password')).to.be.true;
-			expect(htpasswd.authenticateSync(data, 'sha1', 'other')).to.be.false;
+			expect(htpasswd.authenticateSync({
+				username: 'sha1',
+				password: 'password',
+				file
+			})).to.be.true;
+			expect(htpasswd.authenticateSync({
+				username: 'sha1',
+				password: 'other',
+				file
+			})).to.be.false;
 		});
 
 		it('works with crypt(3)', function() {
-			expect(htpasswd.authenticateSync(data, 'crypt', 'password')).to.be.true;
-			expect(htpasswd.authenticateSync(data, 'crypt', 'other')).to.be.false;
+			expect(htpasswd.authenticateSync({
+				username: 'crypt',
+				password: 'password',
+				file
+			})).to.be.true;
+			expect(htpasswd.authenticateSync({
+				username: 'crypt',
+				password: 'other',
+				file
+			})).to.be.false;
 		});
 	});
 });

@@ -11,22 +11,22 @@ describe('htpasswd-js', function() {
 	});
 
 	it('works with bcrypt', function() {
-		expect(htpasswd.authenticate(data, 'bcrypt', 'password')).to.be.true;
-		expect(htpasswd.authenticate(data, 'bcrypt', 'other')).to.be.false;
+		expect(htpasswd.authenticateSync(data, 'bcrypt', 'password')).to.be.true;
+		expect(htpasswd.authenticateSync(data, 'bcrypt', 'other')).to.be.false;
 	});
 
 	it('works with md5', function() {
-		expect(htpasswd.authenticate(data, 'md5', 'password')).to.be.true;
-		expect(htpasswd.authenticate(data, 'md5', 'other')).to.be.false;
+		expect(htpasswd.authenticateSync(data, 'md5', 'password')).to.be.true;
+		expect(htpasswd.authenticateSync(data, 'md5', 'other')).to.be.false;
 	});
 
 	it('works with sha1', function() {
-		expect(htpasswd.authenticate(data, 'sha1', 'password')).to.be.true;
-		expect(htpasswd.authenticate(data, 'sha1', 'other')).to.be.false;
+		expect(htpasswd.authenticateSync(data, 'sha1', 'password')).to.be.true;
+		expect(htpasswd.authenticateSync(data, 'sha1', 'other')).to.be.false;
 	});
 
 	it('works with crypt(3)', function() {
-		expect(htpasswd.authenticate(data, 'crypt', 'password')).to.be.true;
-		expect(htpasswd.authenticate(data, 'crypt', 'other')).to.be.false;
+		expect(htpasswd.authenticateSync(data, 'crypt', 'password')).to.be.true;
+		expect(htpasswd.authenticateSync(data, 'crypt', 'other')).to.be.false;
 	});
 });

@@ -78,7 +78,7 @@ describe('Htpasswd', function() {
 		});
 	});
 
-	describe('#authenticate', function() {
+	describe('#authenticateSync', function() {
 		const username = 'username';
 		const password = 'password';
 		const hash = 'hash';
@@ -92,7 +92,7 @@ describe('Htpasswd', function() {
 		});
 
 		it('authenticates provided username and password', function() {
-			let result = htpasswd.authenticate(username, password);
+			let result = htpasswd.authenticateSync(username, password);
 
 			expect(htpasswd.getHash).to.be.calledOnce;
 			expect(htpasswd.getHash).to.be.calledOn(htpasswd);
@@ -106,7 +106,7 @@ describe('Htpasswd', function() {
 		it('returns false without checking if hash is not found for user', function() {
 			htpasswd.getHash.returns(null);
 
-			let result = htpasswd.authenticate(username, password);
+			let result = htpasswd.authenticateSync(username, password);
 
 			expect(checkUtils.checkPassword).to.not.be.called;
 			expect(result).to.be.false;

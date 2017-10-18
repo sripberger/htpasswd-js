@@ -66,12 +66,15 @@ idea to block execution for potentially long periods of time.
 
 Unlike `htpasswd-auth` and other similar modules, plain text passwords are
 *not* supported by `htpasswd-js`. The reason for this is that there's no real
-way of telling the difference between a `crypt(3)` hash and plain text, besides
-checking the hash and the unhashed password for equality directly. This is bad
-because it can enables an attacker to enter `crypt(3)` hashes directly, without
-even needing the password. This is the same reason plain text and `crypt(3)`
-passwords are never supported by the same Apache instance. You get one or the
-other, based on which system you're running on.
+way in the htpasswd format of telling the difference between a `crypt(3)` hash
+and plain text. This is because the plain text and `crypt(3)` passwords are
+never supported by the same Apache instance. You get one or the other, based on
+which operating system you're running on.
+
+Some other modules will check the unhashed password for equality with the hash
+before checking it with `crypt(3)`. This is a bad idea, because it potentially
+allows an attacker to enter `crypt(3)` hashes directly, without even needing to
+do cryptanalysis to obtain the password.
 
 Also, you *really* shouldn't be storing passwords as plain text. Or `crypt(3)`.
 Or really anything but `bcrypt` at this point. Why? See below.

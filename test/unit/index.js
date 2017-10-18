@@ -13,7 +13,6 @@ describe('index', function() {
 	beforeEach(function() {
 		htpasswd = new Htpasswd();
 		sandbox.stub(fse, 'readFile').resolves(data);
-		sandbox.stub(fse, 'readFileSync').returns(data);
 		sandbox.stub(Htpasswd, 'parse').returns(htpasswd);
 	});
 

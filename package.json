@@ -23,7 +23,6 @@
     "chai": "^3.5.0",
     "documentation": "^5.2.2",
     "eslint": "^3.19.0",
-    "fs-extra": "^4.0.2",
     "mocha": "^3.4.2",
     "sinon": "^2.3.2",
     "sinon-chai": "^2.10.0"
@@ -32,6 +31,7 @@
     "apache-crypt": "^1.2.1",
     "apache-md5": "^1.1.2",
     "bcryptjs": "^2.4.3",
+    "fs-extra": "^4.0.2",
     "xerror": "^1.1.2"
   }
 }

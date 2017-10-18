@@ -18,8 +18,8 @@ htpasswd.authenticate({
 	username: 'username',
 	password: 'password',
 	file: '/absolute/path/to/file.htpasswd'
-}).
-	then((result) => {
+})
+	.then((result) => {
 		// Result will be true if and only if
 		// username and password were correct.
 	});
